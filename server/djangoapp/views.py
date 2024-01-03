@@ -90,3 +90,9 @@ def get_dealerships(request):
 # def add_review(request, dealer_id):
 # ...
 
+
+def test_function_with_bad_syntax(request):
+    # This view will cause a server error intentionally
+    # because of bad syntax
+    a = 1/0
+    return HttpResponse('This should cause a server error')
