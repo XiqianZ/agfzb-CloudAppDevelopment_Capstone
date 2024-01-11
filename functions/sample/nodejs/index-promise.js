@@ -1,5 +1,6 @@
 /**
  * Get all dealerships
+ * two db: dealerships and reviews
  */
 
 const { CloudantV1 } = require('@ibm-cloud/cloudant');
@@ -13,8 +14,11 @@ function main(params) {
     });
     cloudant.setServiceUrl(params.COUCH_URL);
 
-    let dbListPromise = getDbs(cloudant);
-    return dbListPromise;
+    // let dbListPromise = getDbs(cloudant);
+    let result = getMatchingRecords(cloudant,"dealerships",{id:32});
+
+    // return dbListPromise;
+    return result;
 }
 
 function getDbs(cloudant) {
@@ -39,7 +43,7 @@ function getDbs(cloudant) {
      return new Promise((resolve, reject) => {
          cloudant.postFind({db:dbname,selector:selector})
                  .then((result)=>{
-                   resolve({result:result.result.docs});
+                   resolve({Retreived:result});
                  })
                  .catch(err => {
                     console.log(err);
@@ -64,3 +68,15 @@ function getDbs(cloudant) {
              });
          })
  }
+
+
+ cloudant_info = {
+    IAM_API_KEY: "rPnaY-vOBNNyYso8OV8I-blbzPLVEVC4cav9HJu_KanU",
+    COUCH_URL:  "https://2fb1c265-3843-44c8-ab91-5a01d1e387b8-bluemix.cloudantnosqldb.appdomain.cloud"
+}
+
+main(cloudant_info).then((result) => {
+    console.log(result);
+}).catch((err) => {
+    console.log(err);
+});

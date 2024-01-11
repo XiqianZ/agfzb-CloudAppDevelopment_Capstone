@@ -1,17 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
+{% extends "djangoapp/base.html" %}
+{% load static %}
+
 <head>
-    <meta charset="UTF-8">
-    <title>Dealership Review</title>
-    {% load static %}
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>{% block title %}Dealer Review{% endblock %}</title>
 </head>
 
     <body>
+        {% block content %}
+        <h3>Review for <b>{{dealer.full_name}}</b></h3>
+        
+        <div class="container">
+            <div class="card-deck">
+                {% for review in reviews %}
+                <div class="card" style="width: 40rem;">
+                    <div>
+                        {% if review.sentiment == "negative" %}
+                            <img class="card-img-left" src="{{MEDIA_URL}}/emoji/negative.png" alt="user" width="30">
+                        {% elif review.sentiment == "positive"  %}
+                            <img class="card-img-left" src="{{MEDIA_URL}}/emoji/positive.png" alt="user" width="30">
+                        {% elif review.sentiment == "neutral"%}
+                            <img class="card-img-left" src="{{MEDIA_URL}}/emoji/neutral.png" alt="user" width="30">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{review.name}}</h5>
+                        <p class="card-text">{{review.}}</p>
+                        <p class="card-text">{{review.review}}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
-    <!--Add a nav bar here -->
+        <div class="container">
+            <hr>
+            {% if user.is_authenticated %}
+                <a href="{% url 'djangoapp:add_review' dealer.id %}">
+                    <button type="button" class="btn btn-primary">Add Review</button>
+                </a>
+            {% endif %}
+        </div>
 
-    <!-- Add reviews as cards -->
+
+
+
+
+        {% endblock %}
+
 
     </body>
 

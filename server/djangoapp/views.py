@@ -2,19 +2,22 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
-# from .models import related models
-# from .restapis import related methods
+from .models import CarMake, CarModel, DealerReview
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+
+#Cloudant
+from cloudant.client import Cloudant
+from cloudant.query import Query
+
+#std
 from datetime import datetime
 import logging
 import json
+from . import restapis
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
-
-# Create your views here.
 
 
 # Create an `about` view to render a static about page
@@ -73,26 +76,70 @@ def registration_request(request):
         else:
             context['message'] = "User already exists."
             return render(request, 'djangoapp/registration.html', context)
-                
 
-# Update the `get_dealerships` view to render the index page with a list of dealerships
+
+# Index and detail dealerships views
 def get_dealerships(request):
     context = {}
     if request.method == "GET":
+        dealerships = restapis.get_all_dealers_from_cf()
+        dealer_names = [dealer.short_name for dealer in dealerships]
+        context["dealer_names"] = dealer_names
+        context["dealerships"] = dealerships
         return render(request, 'djangoapp/index.html', context)
 
+def get_dealer_details(request, dealer_id):
+    context = {}
+    if request.method == "GET":
+        if(dealer_id):
+            print(f"==== get_dealer_details, input: dealer_id {dealer_id}")
+            dealer = restapis.get_dealer_from_cf_by_id(dealer_id)
+            reviews = restapis.get_review_by_dealer_id_from_cf(dealer_id)
+            context["dealer"] = dealer
+            context["reviews"] = reviews
+            return render(request, 'djangoapp/dealer_details.html', context)
+        else:
+            return redirect("djangoapp:index")
 
-# Create a `get_dealer_details` view to render the reviews of a dealer
-# def get_dealer_details(request, dealer_id):
-# ...
+
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
-
-
-def test_function_with_bad_syntax(request):
-    # This view will cause a server error intentionally
-    # because of bad syntax
-    a = 1/0
-    return HttpResponse('This should cause a server error')
+def add_review(request, dealer_id):
+    print(f"==== add_review, input: dealer_id {dealer_id}")
+    #Check authentication
+    if not request.user.is_authenticated:
+        return redirect("djangoapp:index")
+    else:
+        context = {}
+        if request.method == "GET":
+            dealer = restapis.get_dealer_from_cf_by_id(dealer_id)
+            cars = CarModel.objects.filter(dealer_id=dealer_id)
+            context["dealer"] = dealer
+            context["cars"] = cars
+            return render(request, 'djangoapp/add_review.html', context)
+        elif request.method == "POST":
+            carModel_instance = get_object_or_404(CarModel, pk=request.POST['car'])
+            purchase_date_str = datetime.strptime(request.POST['purchase_date'], '%m/%d/%Y')
+            formatted_date_str = purchase_date_str.strftime('%Y-%m-%d')
+            
+            payload = DealerReview(
+                id = request.user.id,
+                dealership = dealer_id,
+                name = request.user.first_name + " " + request.user.last_name,
+                purchase = request.POST['purchasecheck'],
+                review = request.POST['review_content'],
+                purchase_date = formatted_date_str,
+                car_make = carModel_instance.maker.name,
+                car_model = carModel_instance.name,
+                car_year = carModel_instance.year.strftime("%Y"),
+                sentiment="",
+            )
+            try:              
+                if(restapis.add_review_to_db(payload)):
+                    return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
+            except:
+                logger.error("Unable to connect to Cloudant")
+            finally:
+                return redirect("djangoapp:add_review", dealer_id=dealer_id)
