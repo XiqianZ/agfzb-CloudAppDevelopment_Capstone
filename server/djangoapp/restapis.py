@@ -12,12 +12,11 @@ from cloudant.error import CloudantException
 # e.g., response = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
 #                                     auth=HTTPBasicAuth('apikey', api_key))
 
-API_KEY = "rPnaY-vOBNNyYso8OV8I-blbzPLVEVC4cav9HJu_KanU"
-URL = "https://2fb1c265-3843-44c8-ab91-5a01d1e387b8-bluemix.cloudantnosqldb.appdomain.cloud"
+API_KEY = "fill_in_your_api_key"
+URL = "fill_in_your_url"
 
-
-NLP_API_KEY =  "e9BlgpP9SCT0BCAEk8F0504YEUg7wqh-JP3yW_QDHBtS"
-NLP_URL = "https://api.au-syd.natural-language-understanding.watson.cloud.ibm.com/instances/c39bd6e1-e50c-4ebd-9413-b7a7c0dad472"
+NLP_API_KEY =  "fill_in_your_nlp_api_key"
+NLP_URL = "fill_in_your_nlp_url"
 
 
 def get_request(url, **kwargs):
